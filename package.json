@@ -1,0 +1,9 @@
+{
+  "name": "saiten-camera",
+  "version": "1.0.0",
+  "description": "おまかせ採点カメラ",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}
