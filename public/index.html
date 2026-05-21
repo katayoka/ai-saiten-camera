@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>おまかせ採点カメラ</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #ffffff; --bg-sub: #f5f5f3; --text: #1a1a1a; --text-sub: #6b6b6b;
+      --text-hint: #a0a0a0; --border: rgba(0,0,0,0.15); --border-md: rgba(0,0,0,0.25);
+      --radius-md: 8px; --radius-lg: 12px;
+      --green-bg: #EAF3DE; --green-text: #3B6D11; --green-val: #1D9E75;
+      --red-bg: #FCEBEB; --red-text: #A32D2D; --amber-val: #BA7517;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a1a; --bg-sub: #252525; --text: #f0f0f0; --text-sub: #a0a0a0;
+        --text-hint: #606060; --border: rgba(255,255,255,0.12); --border-md: rgba(255,255,255,0.22);
+        --green-bg: #173404; --green-text: #97C459; --red-bg: #501313; --red-text: #F09595;
+      }
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 480px; margin: 0 auto; padding: 0 0 4rem; }
+    .header { padding: 1.25rem 1.25rem 0; border-bottom: 0.5px solid var(--border); }
+    .header-title { font-size: 15px; font-weight: 500; padding-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+    .header-title i { font-size: 18px; color: var(--text-sub); }
+    .screen { display: none; padding: 1.5rem 1.25rem; }
+    .screen.active { display: block; }
+    h2 { font-size: 20px; font-weight: 500; margin-bottom: 0.4rem; }
+    .subtitle { font-size: 14px; color: var(--text-sub); margin-bottom: 1.5rem; line-height: 1.6; }
+    .field { margin-bottom: 1rem; }
+    label { font-size: 13px; color: var(--text-sub); display: block; margin-bottom: 6px; }
+    input[type=text], select { width: 100%; padding: 10px 12px; font-size: 15px; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); background: var(--bg); color: var(--text); -webkit-appearance: none; appearance: none; }
+    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23999' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+    .btn-primary { width: 100%; padding: 13px; font-size: 15px; font-weight: 500; background: var(--text); color: var(--bg); border: none; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 0.5rem; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary { width: 100%; padding: 12px; font-size: 14px; background: transparent; color: var(--text); border: 0.5px solid var(--border-md); border-radius: var(--radius-md); cursor: pointer; margin-top: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .child-tag { font-size: 12px; background: var(--bg-sub); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 4px 10px; display: inline-block; margin-bottom: 1.25rem; color: var(--text-sub); }
+    .upload-area { border: 1.5px dashed var(--border-md); border-radius: var(--radius-lg); padding: 2rem 1rem; text-align: center; cursor: pointer; background: var(--bg-sub); margin-bottom: 1rem; }
+    .upload-area i { font-size: 36px; color: var(--text-hint); display: block; margin-bottom: 8px; }
+    .upload-area p { font-size: 14px; color: var(--text-sub); }
+    .upload-area .hint { font-size: 12px; color: var(--text-hint); margin-top: 4px; }
+    .thumb-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+    .thumb { width: 80px; height: 80px; border-radius: var(--radius-md); object-fit: cover; border: 0.5px solid var(--border); }
+    .error-box { background: var(--red-bg); border-radius: var(--radius-md); padding: 1rem; font-size: 13px; color: var(--red-text); margin-top: 1rem; line-height: 1.6; display: none; }
+    .error-box strong { display: block; margin-bottom: 4px; font-weight: 500; }
+    .analyzing-screen { text-align: center; padding: 4rem 1rem; }
+    .spinner { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--text); border-radius: 50%; animation: spin 0.9s linear infinite; margin: 0 auto 1.25rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .analyzing-msg { font-size: 14px; color: var(--text-sub); line-height: 1.7; }
+    .report-meta { font-size: 12px; color: var(--text-hint); margin-bottom: 1.25rem; }
+    .summary-cards { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-bottom: 1rem; }
+    .scard { background: var(--bg-sub); border-radius: var(--radius-md); padding: 0.75rem 1rem; }
+    .scard .slabel { font-size: 12px; color: var(--text-sub); margin-bottom: 4px; }
+    .scard .sval { font-size: 22px; font-weight: 500; }
+    .scard .sval.good { color: var(--green-val); }
+    .scard .sval.warn { color: var(--amber-val); }
+    .section-title { font-size: 14px; font-weight: 500; color: var(--text-sub); margin: 1.5rem 0 0.75rem; padding-top: 1rem; border-top: 0.5px solid var(--border); text-transform: uppercase; letter-spacing: 0.04em; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+    table th { text-align: left; font-size: 11px; font-weight: 500; color: var(--text-hint); padding: 6px 4px; border-bottom: 0.5px solid var(--border); }
+    table td { padding: 9px 4px; border-bottom: 0.5px solid var(--border); vertical-align: top; line-height: 1.5; word-break: break-word; }
+    .section-header td { font-size: 12px; font-weight: 500; color: var(--text-sub); padding: 10px 4px 4px; background: var(--bg-sub); }
+    .badge { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 99px; font-weight: 500; }
+    .badge.ok { background: var(--green-bg); color: var(--green-text); }
+    .badge.ng { background: var(--red-bg); color: var(--red-text); }
+    .praise-box { background: var(--green-bg); border-radius: var(--radius-md); padding: 1rem; font-size: 14px; color: var(--green-text); line-height: 1.7; margin-bottom: 0.5rem; }
+    .action-box { background: var(--bg-sub); border-radius: var(--radius-md); padding: 1rem; font-size: 14px; color: var(--text); line-height: 1.7; }
+    .action-label { font-size: 11px; color: var(--text-hint); font-weight: 500; margin-bottom: 6px; }
+    .pattern-list { list-style: none; padding: 0; }
+    .pattern-list li { display: flex; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); font-size: 14px; line-height: 1.5; }
+    .pattern-list li i { color: var(--text-sub); flex-shrink: 0; margin-top: 2px; font-size: 16px; }
+    .pattern-name { font-weight: 500; margin-bottom: 2px; }
+    .pattern-detail { font-size: 13px; color: var(--text-sub); }
+    .val-error { font-size: 13px; color: var(--red-text); margin-top: 6px; display: none; }
+    input[type=file] { display: none; }
+    .compress-note { font-size: 11px; color: var(--text-hint); text-align: center; margin-top: 6px; }
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-title"><i class="ti ti-camera"></i>おまかせ採点カメラ</div>
+</div>
+
+<div id="s-register" class="screen active">
+  <h2>はじめに登録</h2>
+  <p class="subtitle">お子さんの情報を入力してください。次回から自動で入力されます。</p>
+  <div class="field">
+    <label for="inp-name">お子さんの名前</label>
+    <input type="text" id="inp-name" placeholder="例：たろう">
+  </div>
+  <div class="field">
+    <label for="inp-grade">学年</label>
+    <select id="inp-grade">
+      <option value="">選択してください</option>
+      <option>小学1年生</option><option>小学2年生</option><option>小学3年生</option>
+      <option>小学4年生</option><option>小学5年生</option><option>小学6年生</option>
+      <option>中学1年生</option><option>中学2年生</option><option>中学3年生</option>
+    </select>
+  </div>
+  <p class="val-error" id="reg-err">名前と学年を入力してください。</p>
+  <button class="btn-primary" onclick="goUpload()"><i class="ti ti-arrow-right"></i> 次へ</button>
+</div>
+
+<div id="s-upload" class="screen">
+  <div class="child-tag" id="tag-upload"></div>
+  <h2>ワークブックを撮影</h2>
+  <p class="subtitle">今日解いたページの写真を選んでください。複数枚OK。</p>
+  <div class="upload-area" onclick="document.getElementById('file-inp').click()">
+    <i class="ti ti-photo"></i>
+    <p>写真を選択する</p>
+    <p class="hint">JPG・PNG対応 / 複数枚OK</p>
+  </div>
+  <input type="file" id="file-inp" accept="image/*" multiple onchange="handleFiles(this.files)">
+  <div class="thumb-grid" id="thumbs"></div>
+  <div id="btn-wrap" style="display:none">
+    <button class="btn-primary" id="btn-go" onclick="goAnalyze()">
+      <i class="ti ti-sparkles"></i> AIで採点・分析する
+    </button>
+    <p class="compress-note">※送信前に画像を自動圧縮します</p>
+    <div class="error-box" id="err-box">
+      <strong>エラーが発生しました</strong>
+      <span id="err-msg"></span>
+    </div>
+  </div>
+  <button class="btn-secondary" onclick="showScreen('s-register')"><i class="ti ti-arrow-left"></i> もどる</button>
+</div>
+
+<div id="s-analyzing" class="screen">
+  <div class="analyzing-screen">
+    <div class="spinner"></div>
+    <p class="analyzing-msg" id="analyzing-msg">画像を圧縮中…</p>
+  </div>
+</div>
+
+<div id="s-report" class="screen">
+  <div class="child-tag" id="tag-report"></div>
+  <h2 id="r-title"></h2>
+  <p class="report-meta" id="r-meta"></p>
+  <div class="summary-cards">
+    <div class="scard"><div class="slabel">正解数</div><div class="sval" id="r-score"></div></div>
+    <div class="scard"><div class="slabel">正解率</div><div class="sval" id="r-pct"></div></div>
+  </div>
+  <div class="section-title">問題ごとの結果</div>
+  <div style="overflow-x:auto">
+    <table>
+      <colgroup><col style="width:32px"><col style="width:auto"><col style="width:68px"><col style="width:68px"><col style="width:36px"></colgroup>
+      <thead><tr><th>問</th><th>問題文</th><th id="ans-header">解答</th><th>正解</th><th>正誤</th></tr></thead>
+      <tbody id="r-tbody"></tbody>
+    </table>
+  </div>
+  <div class="section-title">つまずきパターン</div>
+  <ul class="pattern-list" id="r-patterns"></ul>
+  <div class="section-title">今日の褒めどころ</div>
+  <div class="praise-box" id="r-praise"></div>
+  <div class="section-title">親への声かけ</div>
+  <div class="action-box"><div class="action-label">今日これだけ伝えてみて</div><div id="r-voice"></div></div>
+  <div class="section-title">次のアクション</div>
+  <div class="action-box" id="r-action"></div>
+  <button class="btn-secondary" style="margin-top:1.5rem" onclick="goUpload()"><i class="ti ti-camera"></i> 別のページを採点する</button>
+  <button class="btn-secondary" onclick="showScreen('s-register')"><i class="ti ti-settings"></i> 子どもを変更する</button>
+</div>
+
+<script>
+let childName = '', childGrade = '', files = [];
+
+(function() {
+  try {
+    const s = localStorage.getItem('child');
+    if (s) { const d = JSON.parse(s); document.getElementById('inp-name').value = d.name||''; document.getElementById('inp-grade').value = d.grade||''; }
+  } catch(e) {}
+})();
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function goUpload() {
+  childName = document.getElementById('inp-name').value.trim();
+  childGrade = document.getElementById('inp-grade').value;
+  const err = document.getElementById('reg-err');
+  if (!childName || !childGrade) { err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  try { localStorage.setItem('child', JSON.stringify({ name: childName, grade: childGrade })); } catch(e) {}
+  const tag = childName + 'さん（' + childGrade + '）';
+  document.getElementById('tag-upload').textContent = tag;
+  document.getElementById('tag-report').textContent = tag;
+  document.getElementById('ans-header').textContent = childName + 'さんの解答';
+  files = [];
+  document.getElementById('thumbs').innerHTML = '';
+  document.getElementById('btn-wrap').style.display = 'none';
+  document.getElementById('err-box').style.display = 'none';
+  showScreen('s-upload');
+}
+
+function handleFiles(input) {
+  files = Array.from(input);
+  const grid = document.getElementById('thumbs');
+  grid.innerHTML = '';
+  files.forEach(f => {
+    const img = document.createElement('img');
+    img.className = 'thumb';
+    img.src = URL.createObjectURL(f);
+    grid.appendChild(img);
+  });
+  document.getElementById('btn-wrap').style.display = files.length ? 'block' : 'none';
+  document.getElementById('err-box').style.display = 'none';
+}
+
+function showError(msg) {
+  document.getElementById('err-msg').textContent = msg;
+  document.getElementById('err-box').style.display = 'block';
+  const btn = document.getElementById('btn-go');
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-refresh"></i> もう一度試す';
+  showScreen('s-upload');
+}
+
+function setAnalyzingMsg(msg) {
+  document.getElementById('analyzing-msg').textContent = msg;
+}
+
+// 画像をCanvas経由で圧縮してbase64を返す
+function compressImage(file, maxWidth, quality) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let w = img.width, h = img.height;
+      if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', quality);
+      resolve(dataUrl.split(',')[1]);
+    };
+    img.onerror = () => reject(new Error('画像の読み込みに失敗しました'));
+    img.src = url;
+  });
+}
+
+async function goAnalyze() {
+  if (!files.length) return;
+  const btn = document.getElementById('btn-go');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader"></i> 処理中…';
+  document.getElementById('err-box').style.display = 'none';
+  showScreen('s-analyzing');
+
+  try {
+    setAnalyzingMsg('画像を圧縮中…');
+    // 最大1600px、品質0.7で圧縮（スマホ写真でも1MB以下になる）
+    const images = await Promise.all(files.map(async f => ({
+      mediaType: 'image/jpeg',
+      data: await compressImage(f, 1600, 0.7),
+    })));
+
+    setAnalyzingMsg('AIが採点・分析しています…\n10〜30秒ほどかかります');
+
+    const today = new Date().toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+
+    const resp = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ images, childName, childGrade, today }),
+    });
+
+    const text = await resp.text();
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch(e) {
+      throw new Error('サーバーからの応答が不正です: ' + text.slice(0, 80));
+    }
+
+    if (!resp.ok) throw new Error(result.error || 'サーバーエラー（' + resp.status + '）');
+    renderReport(result, today);
+
+  } catch(e) {
+    showError(e.message || '不明なエラーが発生しました。');
+  }
+}
+
+function renderReport(r, today) {
+  const pct = Math.round((r.totalCorrect / r.totalProblems) * 100);
+  document.getElementById('r-title').textContent = r.pageTitle || 'レポート';
+  document.getElementById('r-meta').textContent = [r.pageNumber, today].filter(Boolean).join('　|　');
+  const scoreEl = document.getElementById('r-score');
+  scoreEl.textContent = r.totalCorrect + ' / ' + r.totalProblems + '問';
+  scoreEl.className = 'sval ' + (pct >= 70 ? 'good' : 'warn');
+  const pctEl = document.getElementById('r-pct');
+  pctEl.textContent = pct + '%';
+  pctEl.className = 'sval ' + (pct >= 70 ? 'good' : 'warn');
+  const tbody = document.getElementById('r-tbody');
+  tbody.innerHTML = '';
+  (r.sections || []).forEach(sec => {
+    const hdr = document.createElement('tr');
+    hdr.className = 'section-header';
+    hdr.innerHTML = '<td colspan="5">' + sec.sectionName + '</td>';
+    tbody.appendChild(hdr);
+    (sec.problems || []).forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td style="font-weight:500;white-space:nowrap">' + p.number + '</td>' +
+        '<td style="font-size:12px">' + p.question + '</td>' +
+        '<td style="font-size:12px">' + (p.childAnswer || '—') + '</td>' +
+        '<td style="font-size:12px;color:var(--text-sub)">' + p.correctAnswer + '</td>' +
+        '<td><span class="badge ' + (p.isCorrect ? 'ok' : 'ng') + '">' + (p.isCorrect ? '○' : '✕') + '</span></td>';
+      tbody.appendChild(tr);
+    });
+  });
+  const pl = document.getElementById('r-patterns');
+  pl.innerHTML = '';
+  (r.mistakePatterns || []).forEach(mp => {
+    const li = document.createElement('li');
+    li.innerHTML = '<i class="ti ti-alert-circle"></i><div><div class="pattern-name">' + mp.pattern + '</div><div class="pattern-detail">' + mp.detail + '</div></div>';
+    pl.appendChild(li);
+  });
+  document.getElementById('r-praise').textContent = r.praisePoint;
+  document.getElementById('r-voice').textContent = '「' + r.voicePrompt + '」';
+  document.getElementById('r-action').textContent = r.nextAction;
+  const btn = document.getElementById('btn-go');
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-sparkles"></i> AIで採点・分析する';
+  showScreen('s-report');
+}
+</script>
+</body>
+</html>
