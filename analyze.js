@@ -32,26 +32,12 @@ export default async function handler(req, res) {
       },
     }));
 
-    const prompt = `あなたは小学生・中学生の学習サポートAIです。
-添付した画像はワークブックの問題ページです。
+    const prompt = `学習サポートAIです。画像はワークブックです。
+子ども：${childName}（${childGrade}）、日付：${today}
 
-子どもの名前：${childName}さん
-学年：${childGrade}
-撮影日：${today}
+JSONのみ出力。前置き不要。空欄は(          )で表示。解答は「番号. 単語」形式（例：4. my）。例題セクションはisCorrect:trueで記録。
 
-画像を分析して、以下のJSON形式のみで出力してください。前置き・説明文・Markdownコードブロックは一切不要です。JSONだけ出力してください。
-
-分析手順：
-1. ページタイトル・課名・ページ番号を読み取る
-2. セクション名（ウォームアップ、演習問題など）を認識する
-3. 各問題の選択肢と子どもの解答を読み取る（空欄は「(          )」で表示）
-4. 正誤を判定する
-5. 誤答の原因を推定する
-
-解答の表記：「番号. 単語」形式（例：「4. my」「2. done」）
-
-出力フォーマット：
-{"pageTitle":"ページタイトル","pageNumber":"ページ番号（不明なら空）","sections":[{"sectionName":"セクション名","problems":[{"number":"(1)","question":"問題文（空欄は(          )）","childAnswer":"子の解答","correctAnswer":"正解","isCorrect":true,"mistakeType":"誤答時のみ記載"}]}],"totalCorrect":7,"totalProblems":13,"mistakePatterns":[{"pattern":"パターン名","detail":"親向け説明"}],"praisePoint":"褒めどころ","voicePrompt":"親への声かけワンフレーズ","nextAction":"次のアクション"}`;
+{"pageTitle":"","pageNumber":"","sections":[{"sectionName":"","problems":[{"number":"(1)","question":"","childAnswer":"","correctAnswer":"","isCorrect":true,"mistakeType":""}]}],"totalCorrect":0,"totalProblems":0,"mistakePatterns":[{"pattern":"","detail":""}],"praisePoint":"","voicePrompt":"","nextAction":""}`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -62,7 +48,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 4000,
+        max_tokens: 8000,
         messages: [
           {
             role: 'user',
