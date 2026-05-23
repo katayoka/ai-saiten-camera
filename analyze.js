@@ -32,16 +32,16 @@ export default async function handler(req, res) {
       },
     }));
 
-    const prompt = `You are a learning support AI for Japanese students. Analyze ALL the workbook images provided (there may be multiple pages).
+    const prompt = `You are a learning support AI for Japanese students. Analyze ALL of the attached workbook images together as one session.
 
 Student: ${childName}, Grade: ${childGrade}, Date: ${today}
 
-IMPORTANT: Analyze every single image and include ALL problems from ALL pages in one combined JSON response.
+IMPORTANT: There are multiple images. Analyze EVERY image and include ALL problems from ALL pages in the JSON output.
 
 Output ONLY a valid JSON object. No explanation, no markdown, no code blocks.
 
 Rules:
-- Combine all problems from all images into the sections array
+- Combine all pages into one unified sections array
 - question field: write only the English sentence with blank shown as "( )" - keep it SHORT, max 60 chars
 - childAnswer and correctAnswer: use format "N. word" (e.g. "4. my")
 - mistakeType: short English label (e.g. "present perfect", "gerund")
