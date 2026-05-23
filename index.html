@@ -9,23 +9,25 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #ffffff; --bg-sub: #f5f5f3; --text: #1a1a1a; --text-sub: #6b6b6b;
-      --text-hint: #a0a0a0; --border: rgba(0,0,0,0.15); --border-md: rgba(0,0,0,0.25);
-      --radius-md: 8px; --radius-lg: 12px;
-      --green-bg: #EAF3DE; --green-text: #3B6D11; --green-val: #1D9E75;
-      --red-bg: #FCEBEB; --red-text: #A32D2D; --amber-val: #BA7517;
+      --bg: #FEFCF8; --bg-sub: #FDF6ED; --text: #2D2D2D; --text-sub: #6B6B6B;
+      --text-hint: #A8A8A8; --border: rgba(200,130,70,0.15); --border-md: rgba(200,130,70,0.28);
+      --radius-md: 10px; --radius-lg: 16px;
+      --primary: #D97B3A; --primary-light: #FDF0E4;
+      --green-bg: #EAF5EE; --green-text: #2A7A48; --green-val: #2A9E58;
+      --red-bg: #FDEEED; --red-text: #B83030; --amber-val: #C47A10;
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #1a1a1a; --bg-sub: #252525; --text: #f0f0f0; --text-sub: #a0a0a0;
-        --text-hint: #606060; --border: rgba(255,255,255,0.12); --border-md: rgba(255,255,255,0.22);
-        --green-bg: #173404; --green-text: #97C459; --red-bg: #501313; --red-text: #F09595;
+        --bg: #1E1A16; --bg-sub: #2A2218; --text: #EDE8E0; --text-sub: #A09080;
+        --text-hint: #6A5E50; --border: rgba(200,130,70,0.18); --border-md: rgba(200,130,70,0.32);
+        --primary: #C87040; --primary-light: #2A1C10;
+        --green-bg: #0E2418; --green-text: #70C890; --red-bg: #281010; --red-text: #F09090;
       }
     }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 480px; margin: 0 auto; padding: 0 0 4rem; }
-    .header { padding: 1.25rem 1.25rem 0; border-bottom: 0.5px solid var(--border); }
-    .header-title { font-size: 15px; font-weight: 500; padding-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
-    .header-title i { font-size: 18px; color: var(--text-sub); }
+    .header { padding: 0.9rem 1.25rem; background: var(--primary); }
+    .header-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: #fff; }
+    .header-title i { font-size: 18px; color: rgba(255,255,255,0.85); }
     .screen { display: none; padding: 1.5rem 1.25rem; }
     .screen.active { display: block; }
     h2 { font-size: 20px; font-weight: 500; margin-bottom: 0.4rem; }
@@ -34,10 +36,10 @@
     label { font-size: 13px; color: var(--text-sub); display: block; margin-bottom: 6px; }
     input[type=text], select { width: 100%; padding: 10px 12px; font-size: 15px; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); background: var(--bg); color: var(--text); -webkit-appearance: none; appearance: none; }
     select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23999' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
-    .btn-primary { width: 100%; padding: 13px; font-size: 15px; font-weight: 500; background: var(--text); color: var(--bg); border: none; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 0.5rem; }
+    .btn-primary { width: 100%; padding: 13px; font-size: 15px; font-weight: 700; background: var(--primary); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 0.5rem; box-shadow: 0 3px 10px rgba(255,107,0,0.3); }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-secondary { width: 100%; padding: 12px; font-size: 14px; background: transparent; color: var(--text); border: 0.5px solid var(--border-md); border-radius: var(--radius-md); cursor: pointer; margin-top: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 6px; }
-    .child-tag { font-size: 12px; background: var(--bg-sub); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 4px 10px; display: inline-block; margin-bottom: 1.25rem; color: var(--text-sub); }
+    .btn-secondary { width: 100%; padding: 12px; font-size: 14px; background: transparent; color: var(--primary); border: 1.5px solid var(--primary); border-radius: var(--radius-md); cursor: pointer; margin-top: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 500; }
+    .child-tag { font-size: 12px; background: var(--primary-light); border: 1.5px solid var(--primary); border-radius: 99px; padding: 4px 14px; display: inline-block; margin-bottom: 1.25rem; color: var(--primary); font-weight: 600; }
     .upload-area { border: 1.5px dashed var(--border-md); border-radius: var(--radius-lg); padding: 2rem 1rem; text-align: center; cursor: pointer; background: var(--bg-sub); margin-bottom: 1rem; }
     .upload-area i { font-size: 36px; color: var(--text-hint); display: block; margin-bottom: 8px; }
     .upload-area p { font-size: 14px; color: var(--text-sub); }
@@ -47,9 +49,13 @@
     .error-box { background: var(--red-bg); border-radius: var(--radius-md); padding: 1rem; font-size: 13px; color: var(--red-text); margin-top: 1rem; line-height: 1.6; display: none; }
     .error-box strong { display: block; margin-bottom: 4px; font-weight: 500; }
     .analyzing-screen { text-align: center; padding: 4rem 1rem; }
-    .spinner { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--text); border-radius: 50%; animation: spin 0.9s linear infinite; margin: 0 auto 1.25rem; }
+    .spinner { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.9s linear infinite; margin: 0 auto 1.25rem; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .analyzing-msg { font-size: 14px; color: var(--text-sub); line-height: 1.7; }
+    .trivia-box { margin-top: 2rem; background: var(--primary-light); border-radius: var(--radius-lg); padding: 1.25rem 1.25rem; text-align: left; max-width: 360px; margin-left: auto; margin-right: auto; border: 1.5px solid rgba(255,107,0,0.2); }
+    .trivia-label { font-size: 11px; font-weight: 500; color: var(--text-hint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+    .trivia-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 0.5rem; line-height: 1.5; }
+    .trivia-body { font-size: 13px; color: var(--text-sub); line-height: 1.8; }
     .report-meta { font-size: 12px; color: var(--text-hint); margin-bottom: 1.25rem; }
     .summary-cards { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-bottom: 1rem; }
     .scard { background: var(--bg-sub); border-radius: var(--radius-md); padding: 0.75rem 1rem; }
@@ -57,7 +63,7 @@
     .scard .sval { font-size: 22px; font-weight: 500; }
     .scard .sval.good { color: var(--green-val); }
     .scard .sval.warn { color: var(--amber-val); }
-    .section-title { font-size: 14px; font-weight: 500; color: var(--text-sub); margin: 1.5rem 0 0.75rem; padding-top: 1rem; border-top: 0.5px solid var(--border); text-transform: uppercase; letter-spacing: 0.04em; }
+    .section-title { font-size: 13px; font-weight: 700; color: var(--primary); margin: 1.5rem 0 0.75rem; padding-top: 1rem; border-top: 2px solid var(--primary-light); letter-spacing: 0.04em; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
     table th { text-align: left; font-size: 11px; font-weight: 500; color: var(--text-hint); padding: 6px 4px; border-bottom: 0.5px solid var(--border); }
     table td { padding: 9px 4px; border-bottom: 0.5px solid var(--border); vertical-align: top; line-height: 1.5; word-break: break-word; }
@@ -131,6 +137,12 @@
   <div class="analyzing-screen">
     <div class="spinner"></div>
     <p class="analyzing-msg" id="analyzing-msg">画像を圧縮中…</p>
+    <p style="font-size:12px;color:var(--text-hint);margin-top:0.5rem" id="analyzing-sub"></p>
+    <div class="trivia-box" id="trivia-box" style="display:none">
+      <div class="trivia-label">📖 ちょっといい話</div>
+      <div class="trivia-title" id="trivia-title"></div>
+      <div class="trivia-body" id="trivia-body"></div>
+    </div>
   </div>
 </div>
 
@@ -155,7 +167,7 @@
   <div class="section-title">今日の褒めどころ</div>
   <div class="praise-box" id="r-praise"></div>
   <div class="section-title">親御さんへ</div>
-  <div class="action-box"><div class="action-label">今日これだけ伝えてみて</div><div id="r-voice"></div></div>
+  <div class="action-box"><div class="action-label">今日これだけ伝えてみて 💬</div><div id="r-voice"></div></div>
   <div class="section-title">次のアクション</div>
   <div class="action-box" id="r-action"></div>
   <button class="btn-secondary" style="margin-top:1.5rem" onclick="goUpload()"><i class="ti ti-camera"></i> 別のページを採点する</button>
@@ -207,7 +219,24 @@ function handleFiles(input) {
   files.forEach(f => {
     const img = document.createElement('img');
     img.className = 'thumb';
-    img.src = URL.createObjectURL(f);
+    // HEICはCanvas経由でJPEGに変換してサムネイル表示
+    const isHeic = f.type === 'image/heic' || f.type === 'image/heif' ||
+                   f.name.toLowerCase().endsWith('.heic') || f.name.toLowerCase().endsWith('.heif');
+    if (isHeic && typeof heic2any !== 'undefined') {
+      heic2any({ blob: f, toType: 'image/jpeg', quality: 0.5 }).then(jpegBlob => {
+        const b = Array.isArray(jpegBlob) ? jpegBlob[0] : jpegBlob;
+        img.src = URL.createObjectURL(b);
+      }).catch(() => {
+        img.alt = '📷';
+        img.style.display = 'flex';
+        img.style.alignItems = 'center';
+        img.style.justifyContent = 'center';
+        img.style.fontSize = '28px';
+        img.style.background = 'var(--primary-light)';
+      });
+    } else {
+      img.src = URL.createObjectURL(f);
+    }
     grid.appendChild(img);
   });
   document.getElementById('btn-wrap').style.display = files.length ? 'block' : 'none';
@@ -223,8 +252,30 @@ function showError(msg) {
   showScreen('s-upload');
 }
 
-function setAnalyzingMsg(msg) {
+const TRIVIA = [
+  { title: "子どもの集中力は「学年＋1分」が目安", body: "小学3年生なら約4分、中学1年生なら約7分が自然な集中の限界と言われています。それを超えると脳が休憩モードに入り、ぼんやりしたり落書きが始まったりします。長時間やらせるより、短く区切って休憩をはさむ方が学習効率はぐっと上がります。10分やったら5分休憩を繰り返すポモドーロ式は子どもにも効果的です。" },
+  { title: "夕食後に眠くなるのは血糖値のせい", body: "食後に眠くなるのは意志の問題ではなく、血糖値の急上昇と急降下が原因です。白米やパンなど糖質が多い食事の後は特に顕著です。夕食後すぐに勉強させると眠い＝つまらないと感情と結びついてしまうことも。食後30分は軽いストレッチや会話の時間にして、落ち着いてから勉強を始めると定着率が上がります。" },
+  { title: "「なんでわからないの」が一番逆効果な理由", body: "人は感情的なストレスを感じると、脳の扁桃体が活性化し、論理的思考を担う前頭前野の働きが低下します。つまり叱られたり責められたりすると、文字通り考えられなくなるのです。惜しい、あと一歩だったねと言い換えるだけで子どもの脳はリラックスし、次の問題に取り組む力が戻ってきます。" },
+  { title: "間違えた問題こそ最高の教材", body: "記憶の定着には失敗→修正のプロセスが不可欠です。脳科学では、間違えた直後が最も記憶に刻まれやすいタイミングとされています。丸付けでバツがついた問題を恥ずかしいものとして隠すのではなく、これが今日の収穫と前向きに捉えると、復習の質が劇的に変わります。" },
+  { title: "寝る前の復習が記憶を定着させる科学的理由", body: "人は眠っている間に、その日の記憶を整理・定着させます。特に眠る直前にインプットした情報は、脳が睡眠中に優先的に処理します。寝る前5分、その日に間違えた問題をさっと見直すだけで翌朝の定着率が大きく変わります。スマホではなくノートを枕元に置く習慣、試してみてください。" },
+  { title: "「褒めること」と「おだてること」はまったく違う", body: "すごい、天才という結果への褒め言葉より、最後まで諦めなかったねというプロセスへの言葉の方が、子どものやる気を長続きさせます。スタンフォード大学の研究では、努力や方法を褒められた子どもは難しい問題をチャレンジとして楽しむようになり、結果として成績も伸びやすいことが示されています。" },
+  { title: "「声に出して読む」と理解度が上がる理由", body: "黙読より音読の方が脳の使用領域が広く、視覚・聴覚・発声を同時に使うため記憶に残りやすいことがわかっています。英語の音読は特に効果的で、文法を感覚として身体に覚えさせる効果があります。うまく発音できなくてもOK。声に出す習慣をつけるだけで長期的な定着率が変わってきます。" },
+  { title: "子どもが「やる気をなくす瞬間」ベスト3", body: "①答えを急かされたとき（考える前に答えを言われてしまう）、②比べられたとき（お兄ちゃんはできたのに）、③頑張りを見てもらえないとき（結果だけ見られる）。逆に言えば、じっくり待つ、その子だけを見る、過程をほめるの3つで、子どものやる気スイッチは大きく変わります。" },
+];
+
+function showTrivia() {
+  const t = TRIVIA[Math.floor(Math.random() * TRIVIA.length)];
+  document.getElementById('trivia-title').textContent = t.title;
+  document.getElementById('trivia-body').textContent = t.body;
+  document.getElementById('trivia-box').style.display = 'block';
+}
+
+function setAnalyzingMsg(msg, showSub) {
   document.getElementById('analyzing-msg').textContent = msg;
+  if (showSub) {
+    document.getElementById('analyzing-sub').textContent = '画像1枚ずつ順番に解析しています';
+    showTrivia();
+  }
 }
 
 // HEIC含む画像をJPEGに変換・圧縮してbase64を返す
@@ -269,14 +320,14 @@ async function goAnalyze() {
   showScreen('s-analyzing');
 
   try {
-    setAnalyzingMsg('画像を圧縮中…');
+    setAnalyzingMsg('画像を圧縮中…', false);
     // 最大1600px、品質0.7で圧縮（スマホ写真でも1MB以下になる）
     const images = await Promise.all(files.map(async f => ({
       mediaType: 'image/jpeg',
       data: await compressImage(f, 1600, 0.7),
     })));
 
-    setAnalyzingMsg('AIが採点・分析しています…\n10〜30秒ほどかかります');
+    setAnalyzingMsg('AIが採点・分析しています…\n40〜60秒ほどお待ちください', true);
 
     const today = new Date().toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
 
