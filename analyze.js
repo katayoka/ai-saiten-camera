@@ -79,13 +79,34 @@ Rules:
 
     const data = await response.json();
     const raw = data.content.map(c => c.text || '').join('').trim();
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
 
-    if (!jsonMatch) {
-      return res.status(500).json({ error: 'レポートの生成に失敗しました', raw });
+    let result;
+    try {
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('JSON not found');
+      
+      let jsonStr = jsonMatch[0];
+      
+      const opens = (jsonStr.match(/\{/g) || []).length;
+      const closes = (jsonStr.match(/\}/g) || []).length;
+      if (opens > closes) {
+        jsonStr += '}'.repeat(opens - closes);
+      }
+      const openArr = (jsonStr.match(/\[/g) || []).length;
+      const closeArr = (jsonStr.match(/\]/g) || []).length;
+      if (openArr > closeArr) {
+        jsonStr += ']'.repeat(openArr - closeArr);
+      }
+
+      result = JSON.parse(jsonStr);
+    } catch(parseErr) {
+      return res.status(500).json({ 
+        error: 'JSONパースエラー: ' + parseErr.message,
+        rawLength: raw.length,
+        rawTail: raw.slice(-200)
+      });
     }
 
-    const result = JSON.parse(jsonMatch[0]);
     return res.status(200).json(result);
 
   } catch (err) {
