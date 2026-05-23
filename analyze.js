@@ -32,10 +32,19 @@ export default async function handler(req, res) {
       },
     }));
 
-    const prompt = `学習サポートAIです。画像はワークブックです。
-子ども：${childName}（${childGrade}）、日付：${today}
+    const prompt = `You are a learning support AI for Japanese students. Analyze the workbook images.
 
-JSONのみ出力。前置き不要。空欄は(          )で表示。解答は「番号. 単語」形式（例：4. my）。例題セクションはisCorrect:trueで記録。
+Student: ${childName}, Grade: ${childGrade}, Date: ${today}
+
+Output ONLY a valid JSON object. No explanation, no markdown, no code blocks.
+
+Rules:
+- question field: write only the English sentence with blank shown as "( )" - keep it SHORT, max 60 chars
+- childAnswer and correctAnswer: use format "N. word" (e.g. "4. my")
+- mistakeType: short English label (e.g. "present perfect", "gerund")
+- For example problems (例題), set isCorrect:true and childAnswer:""
+- praisePoint, voicePrompt, nextAction: write in Japanese, keep under 80 chars each
+- Ensure all strings are properly escaped JSON - no unescaped quotes or newlines inside strings
 
 {"pageTitle":"","pageNumber":"","sections":[{"sectionName":"","problems":[{"number":"(1)","question":"","childAnswer":"","correctAnswer":"","isCorrect":true,"mistakeType":""}]}],"totalCorrect":0,"totalProblems":0,"mistakePatterns":[{"pattern":"","detail":""}],"praisePoint":"","voicePrompt":"","nextAction":""}`;
 
