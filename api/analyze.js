@@ -78,6 +78,7 @@ Rules:
 
   let jsonStr = jsonMatch[0];
 
+  // 括弧の数を合わせてJSONを修復
   const opens = (jsonStr.match(/\{/g) || []).length;
   const closes = (jsonStr.match(/\}/g) || []).length;
   if (opens > closes) jsonStr += '}'.repeat(opens - closes);
@@ -105,6 +106,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: '画像がありません' });
     }
 
+    // 1枚ずつ解析
     const results = [];
     for (const img of images) {
       const imageContent = {
@@ -127,5 +129,31 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: '全画像の解析に失敗しました' });
     }
 
+    // 複数の結果を1つに統合
     const merged = {
-      pageTitle: results.map(r => r.pageTitle).filter(Boolean).join(' /
+      pageTitle: results.map(r => r.pageTitle).filter(Boolean).join(' / ') || 'レポート',
+      pageNumber: results.map(r => r.pageNumber).filter(Boolean).join(', '),
+      sections: results.flatMap(r => r.sections || []),
+      totalCorrect: results.reduce((sum, r) => sum + (r.totalCorrect || 0), 0),
+      totalProblems: results.reduce((sum, r) => sum + (r.totalProblems || 0), 0),
+      mistakePatterns: results.flatMap(r => r.mistakePatterns || []),
+      praisePoint: results[results.length - 1]?.praisePoint || '',
+      voicePrompt: results[results.length - 1]?.voicePrompt || '',
+      nextAction: results[results.length - 1]?.nextAction || '',
+    };
+
+    // mistakePatternsの重複を除去
+    const seen = new Set();
+    merged.mistakePatterns = merged.mistakePatterns.filter(mp => {
+      if (!mp.pattern || seen.has(mp.pattern)) return false;
+      seen.add(mp.pattern);
+      return true;
+    });
+
+    return res.status(200).json(merged);
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err.message || '不明なエラー' });
+  }
+}
