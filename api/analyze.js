@@ -6,22 +6,47 @@ export const config = {
   },
 };
 
-async function analyzeOneImage(imageContent, childName, childGrade, today, apiKey) {
-  const prompt = `You are a learning support AI for Japanese students. Analyze this workbook image.
+async function analyzeOneImage(imageContent, childName, childGrade, childSubject, today, apiKey) {
+  const isEnglish = childSubject === 'english';
+
+  const englishPrompt = `You are a learning support AI for Japanese students. Analyze this workbook image.
 
 Student: ${childName}, Grade: ${childGrade}, Date: ${today}
 
 Output ONLY a valid JSON object. No explanation, no markdown, no code blocks.
 
 Rules:
-- question field: English sentence only, blank as "( )", max 60 chars
-- childAnswer and correctAnswer: format "N. word" (e.g. "4. my")
-- mistakeType: short English label (e.g. "present perfect", "gerund")
-- For example problems (例題): isCorrect:true, childAnswer:""
+- question field: Write ONLY the sentence that contains the blank ( ). This is usually the B: line or the fill-in sentence, NOT the A: question sentence. Example: write "It made ( ) very happy." not "Did you receive a letter from Jane?" Keep under 70 chars.
+- childAnswer: the answer option the child actually wrote in the blank. Format "N. word" (e.g. "4. my"). Read carefully what the child wrote.
+- correctAnswer: the grammatically correct answer for the blank. Format "N. word" (e.g. "3. me").
+- CRITICAL for isCorrect: compare only the word part (ignore number prefix). If words match exactly -> isCorrect: true. If different -> isCorrect: false. Double-check every problem before setting this.
+- mistakeType: short English label only when isCorrect is false (e.g. "present perfect", "gerund"). Empty string if correct.
+- For example problems (例題): isCorrect:true, childAnswer:"", mistakeType:""
 - praisePoint, voicePrompt, nextAction: Japanese, max 80 chars each
 - All strings must be valid JSON (no unescaped quotes or newlines)
 
 {"pageTitle":"","pageNumber":"","sections":[{"sectionName":"","problems":[{"number":"(1)","question":"","childAnswer":"","correctAnswer":"","isCorrect":true,"mistakeType":""}]}],"totalCorrect":0,"totalProblems":0,"mistakePatterns":[{"pattern":"","detail":""}],"praisePoint":"","voicePrompt":"","nextAction":""}`;
+
+  const mathPrompt = `You are a learning support AI for Japanese students. Analyze this math workbook image.
+
+Student: ${childName}, Grade: ${childGrade}, Date: ${today}
+
+Output ONLY a valid JSON object. No explanation, no markdown, no code blocks.
+
+Rules:
+- question field: Write the math problem in short form (e.g. "24 + 38 = ?", "□ x 3 = 12"). Keep under 60 chars.
+- childAnswer: what the child wrote as the final answer (e.g. "62", "4"). If blank, use "未記入".
+- correctAnswer: the correct final answer (e.g. "62", "4").
+- CRITICAL for isCorrect: compare final answers only. If child answer matches correct answer -> isCorrect: true.
+- mistakeType: classify the mistake type in Japanese when isCorrect is false. Choose from: 計算ミス/繰り上がり/繰り下がり/かけ算/割り算/式の立て方/単位の変換/分数/小数/その他. Empty string if correct.
+- processNote: if child showed working/scratch work, briefly describe where the error occurred in Japanese (e.g. "繰り下がりで10を忘れた"). Empty string if no working shown or if correct.
+- For example problems (例題): isCorrect:true, childAnswer:"", mistakeType:"", processNote:""
+- praisePoint, voicePrompt, nextAction: Japanese, max 80 chars each. Focus on math-specific encouragement.
+- All strings must be valid JSON (no unescaped quotes or newlines)
+
+{"pageTitle":"","pageNumber":"","sections":[{"sectionName":"","problems":[{"number":"(1)","question":"","childAnswer":"","correctAnswer":"","isCorrect":true,"mistakeType":"","processNote":""}]}],"totalCorrect":0,"totalProblems":0,"mistakePatterns":[{"pattern":"","detail":""}],"praisePoint":"","voicePrompt":"","nextAction":""}`;
+
+  const prompt = isEnglish ? englishPrompt : mathPrompt;
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -74,7 +99,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { images, childName, childGrade, today } = req.body;
+    const { images, childName, childGrade, childSubject, today } = req.body;
 
     if (!images || !images.length) {
       return res.status(400).json({ error: '画像がありません' });
@@ -91,7 +116,7 @@ export default async function handler(req, res) {
         },
       };
       try {
-        const result = await analyzeOneImage(imageContent, childName, childGrade, today, apiKey);
+        const result = await analyzeOneImage(imageContent, childName, childGrade, childSubject, today, apiKey);
         results.push(result);
       } catch(e) {
         console.error('画像1枚の解析失敗:', e.message);
@@ -103,28 +128,4 @@ export default async function handler(req, res) {
     }
 
     const merged = {
-      pageTitle: results.map(r => r.pageTitle).filter(Boolean).join(' / ') || 'レポート',
-      pageNumber: results.map(r => r.pageNumber).filter(Boolean).join(', '),
-      sections: results.flatMap(r => r.sections || []),
-      totalCorrect: results.reduce((sum, r) => sum + (r.totalCorrect || 0), 0),
-      totalProblems: results.reduce((sum, r) => sum + (r.totalProblems || 0), 0),
-      mistakePatterns: results.flatMap(r => r.mistakePatterns || []),
-      praisePoint: results[results.length - 1]?.praisePoint || '',
-      voicePrompt: results[results.length - 1]?.voicePrompt || '',
-      nextAction: results[results.length - 1]?.nextAction || '',
-    };
-
-    const seen = new Set();
-    merged.mistakePatterns = merged.mistakePatterns.filter(mp => {
-      if (!mp.pattern || seen.has(mp.pattern)) return false;
-      seen.add(mp.pattern);
-      return true;
-    });
-
-    return res.status(200).json(merged);
-
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: err.message || '不明なエラー' });
-  }
-}
+      pageTitle: results.map(r => r.pageTitle).filter(Boolean).join(' /
