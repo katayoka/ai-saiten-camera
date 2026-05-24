@@ -53,9 +53,9 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .analyzing-msg { font-size: 14px; color: var(--text-sub); line-height: 1.7; }
     .trivia-box { margin-top: 2rem; background: var(--primary-light); border-radius: var(--radius-lg); padding: 1.25rem 1.25rem; text-align: left; max-width: 360px; margin-left: auto; margin-right: auto; border: 1.5px solid rgba(255,107,0,0.2); }
-    .trivia-label { font-size: 11px; font-weight: 500; color: var(--text-hint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
-    .trivia-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 0.5rem; line-height: 1.5; }
-    .trivia-body { font-size: 13px; color: var(--text-sub); line-height: 1.8; }
+    .trivia-label { font-size: 12px; font-weight: 500; color: var(--text-hint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+    .trivia-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 0.6rem; line-height: 1.5; }
+    .trivia-body { font-size: 15px; color: var(--text-sub); line-height: 1.9; }
     .report-meta { font-size: 12px; color: var(--text-hint); margin-bottom: 1.25rem; }
     .summary-cards { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-bottom: 1rem; }
     .scard { background: var(--bg-sub); border-radius: var(--radius-md); padding: 0.75rem 1rem; }
@@ -80,6 +80,8 @@
     .pattern-name { font-weight: 500; margin-bottom: 2px; }
     .pattern-detail { font-size: 13px; color: var(--text-sub); }
     .val-error { font-size: 13px; color: var(--red-text); margin-top: 6px; display: none; }
+    .subject-btn { padding: 14px 8px; font-size: 13px; font-weight: 600; background: var(--bg-sub); color: var(--text-sub); border: 1.5px solid var(--border-md); border-radius: var(--radius-md); cursor: pointer; line-height: 1.6; width: 100%; transition: all 0.15s; }
+    .subject-btn.selected { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
     input[type=file] { display: none; }
     .compress-note { font-size: 11px; color: var(--text-hint); text-align: center; margin-top: 6px; }
   </style>
@@ -105,7 +107,18 @@
       <option>中学1年生</option><option>中学2年生</option><option>中学3年生</option>
     </select>
   </div>
-  <p class="val-error" id="reg-err">名前と学年を入力してください。</p>
+  <div class="field">
+    <label>科目</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px">
+      <button type="button" class="subject-btn" id="btn-english" onclick="selectSubject('english')">
+        <span style="font-size:22px">📖</span><br>英語
+      </button>
+      <button type="button" class="subject-btn" id="btn-math" onclick="selectSubject('math')">
+        <span style="font-size:22px">🔢</span><br>算数・数学
+      </button>
+    </div>
+  </div>
+  <p class="val-error" id="reg-err">名前・学年・科目をすべて入力してください。</p>
   <button class="btn-primary" onclick="goUpload()"><i class="ti ti-arrow-right"></i> 次へ</button>
 </div>
 
@@ -175,12 +188,12 @@
 </div>
 
 <script>
-let childName = '', childGrade = '', files = [];
+let childName = '', childGrade = '', childSubject = '', files = [];
 
 (function() {
   try {
     const s = localStorage.getItem('child');
-    if (s) { const d = JSON.parse(s); document.getElementById('inp-name').value = d.name||''; document.getElementById('inp-grade').value = d.grade||''; }
+    if (s) { const d = JSON.parse(s); document.getElementById('inp-name').value = d.name||''; document.getElementById('inp-grade').value = d.grade||''; if (d.subject) selectSubject(d.subject); }
   } catch(e) {}
 })();
 
@@ -190,14 +203,21 @@ function showScreen(id) {
   window.scrollTo(0, 0);
 }
 
+function selectSubject(subject) {
+  childSubject = subject;
+  document.querySelectorAll('.subject-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('btn-' + subject).classList.add('selected');
+}
+
 function goUpload() {
   childName = document.getElementById('inp-name').value.trim();
   childGrade = document.getElementById('inp-grade').value;
   const err = document.getElementById('reg-err');
-  if (!childName || !childGrade) { err.style.display = 'block'; return; }
+  if (!childName || !childGrade || !childSubject) { err.style.display = 'block'; return; }
   err.style.display = 'none';
-  try { localStorage.setItem('child', JSON.stringify({ name: childName, grade: childGrade })); } catch(e) {}
-  const tag = childName + 'さん（' + childGrade + '）';
+  try { localStorage.setItem('child', JSON.stringify({ name: childName, grade: childGrade, subject: childSubject })); } catch(e) {}
+  const subjectLabel = childSubject === 'english' ? '英語' : '算数・数学';
+  const tag = childName + 'さん（' + childGrade + '・' + subjectLabel + '）';
   document.getElementById('tag-upload').textContent = tag;
   document.getElementById('tag-report').textContent = tag;
   document.getElementById('ans-header').textContent = childName + 'さんの解答';
@@ -253,14 +273,14 @@ function showError(msg) {
 }
 
 const TRIVIA = [
-  { title: "子どもの集中力は「学年＋1分」が目安", body: "小学3年生なら約4分、中学1年生なら約7分が自然な集中の限界と言われています。それを超えると脳が休憩モードに入り、ぼんやりしたり落書きが始まったりします。長時間やらせるより、短く区切って休憩をはさむ方が学習効率はぐっと上がります。10分やったら5分休憩を繰り返すポモドーロ式は子どもにも効果的です。" },
-  { title: "夕食後に眠くなるのは血糖値のせい", body: "食後に眠くなるのは意志の問題ではなく、血糖値の急上昇と急降下が原因です。白米やパンなど糖質が多い食事の後は特に顕著です。夕食後すぐに勉強させると眠い＝つまらないと感情と結びついてしまうことも。食後30分は軽いストレッチや会話の時間にして、落ち着いてから勉強を始めると定着率が上がります。" },
-  { title: "「なんでわからないの」が一番逆効果な理由", body: "人は感情的なストレスを感じると、脳の扁桃体が活性化し、論理的思考を担う前頭前野の働きが低下します。つまり叱られたり責められたりすると、文字通り考えられなくなるのです。惜しい、あと一歩だったねと言い換えるだけで子どもの脳はリラックスし、次の問題に取り組む力が戻ってきます。" },
-  { title: "間違えた問題こそ最高の教材", body: "記憶の定着には失敗→修正のプロセスが不可欠です。脳科学では、間違えた直後が最も記憶に刻まれやすいタイミングとされています。丸付けでバツがついた問題を恥ずかしいものとして隠すのではなく、これが今日の収穫と前向きに捉えると、復習の質が劇的に変わります。" },
-  { title: "寝る前の復習が記憶を定着させる科学的理由", body: "人は眠っている間に、その日の記憶を整理・定着させます。特に眠る直前にインプットした情報は、脳が睡眠中に優先的に処理します。寝る前5分、その日に間違えた問題をさっと見直すだけで翌朝の定着率が大きく変わります。スマホではなくノートを枕元に置く習慣、試してみてください。" },
-  { title: "「褒めること」と「おだてること」はまったく違う", body: "すごい、天才という結果への褒め言葉より、最後まで諦めなかったねというプロセスへの言葉の方が、子どものやる気を長続きさせます。スタンフォード大学の研究では、努力や方法を褒められた子どもは難しい問題をチャレンジとして楽しむようになり、結果として成績も伸びやすいことが示されています。" },
-  { title: "「声に出して読む」と理解度が上がる理由", body: "黙読より音読の方が脳の使用領域が広く、視覚・聴覚・発声を同時に使うため記憶に残りやすいことがわかっています。英語の音読は特に効果的で、文法を感覚として身体に覚えさせる効果があります。うまく発音できなくてもOK。声に出す習慣をつけるだけで長期的な定着率が変わってきます。" },
-  { title: "子どもが「やる気をなくす瞬間」ベスト3", body: "①答えを急かされたとき（考える前に答えを言われてしまう）、②比べられたとき（お兄ちゃんはできたのに）、③頑張りを見てもらえないとき（結果だけ見られる）。逆に言えば、じっくり待つ、その子だけを見る、過程をほめるの3つで、子どものやる気スイッチは大きく変わります。" },
+  { title: "子どもの集中力は「学年＋1分」が目安", body: "小学3年生なら約4分、中学1年生なら約7分が自然な集中の限界と言われています。それを超えると脳が休憩モードに入り、ぼんやりしたり落書きが始まったりします。これは意志の弱さではなく、脳の発達段階による生理的な限界です。長時間一気にやらせるより、短く区切って休憩をはさむ方が学習効率はぐっと上がります。10分やったら5分休憩を繰り返すポモドーロ式は子どもにも効果的で、実践した家庭からは集中が続くようになったという声が多く聞かれます。休憩中は軽く体を動かしたり水を飲んだりするだけでOK。スマホやゲームは脳が切り替わりにくいので避けるのがベターです。" },
+  { title: "夕食後に眠くなるのは血糖値のせい", body: "食後に眠くなるのは意志の問題ではなく、血糖値の急上昇と急降下が原因です。白米やパンなど糖質が多い食事の後は特に顕著で、インスリンが大量に分泌されることで血糖値が急に下がり、眠気が押し寄せます。夕食後すぐに勉強させると眠い＝勉強はつらいものと感情と結びついてしまうリスクもあります。食後30分はリラックスタイムと決めて、軽いストレッチや今日の出来事の会話をする時間にしてみてください。そのあと机に向かうと、スムーズに集中モードに入れます。おやつに甘いものを与えすぎないことも、集中力維持に効果的です。" },
+  { title: "「なんでわからないの」が一番逆効果な理由", body: "人は感情的なストレスを感じると、脳の扁桃体が活性化し、論理的思考を担う前頭前野の働きが低下します。つまり叱られたり責められたりすると、文字通り考えられなくなるのです。これは甘えではなく、脳の仕組みによるものです。なんでわからないの、さっき教えたじゃないという言葉は、子どもを萎縮させるだけで理解を助けません。代わりに惜しい、あと一歩だったね、どこで迷った？と問いかけてみてください。子どもの脳がリラックスし、自分でもう一度考えようとする力が自然と戻ってきます。親御さんの一言が、子どもの脳を開くか閉じるかを決めています。" },
+  { title: "間違えた問題こそ最高の教材", body: "記憶の定着には失敗→気づき→修正のプロセスが不可欠です。脳科学では、間違えた直後が最も記憶に刻まれやすいタイミングとされています。これをエラーラーニング効果と呼びます。正解した問題はすでに知っていることの確認に過ぎませんが、間違えた問題にはまだ知らなかったことが詰まっています。丸付けでバツがついた問題を恥ずかしいものとして隠すのではなく、これが今日の収穫と前向きに捉えてみてください。間違えた問題だけをノートにまとめる間違いノートは、受験生にも人気の効果的な学習法です。" },
+  { title: "寝る前の復習が記憶を定着させる科学的理由", body: "人は眠っている間に、その日の記憶を整理・定着させます。これを記憶の固定化といい、特にレム睡眠中に起きることがわかっています。眠る直前にインプットした情報は、脳が睡眠中に優先的に処理するため、翌朝の定着率が格段に上がります。寝る前5分、その日に間違えた問題をさっと見直すだけでOK。反対に、就寝直前のスマホやゲームは脳を覚醒させてしまい、記憶の定着を妨げます。歯磨きの後に問題を1問だけ見るという小さな習慣から始めてみてください。続けるうちに、子どもも自然と習慣化していきます。" },
+  { title: "「褒めること」と「おだてること」はまったく違う", body: "すごい、天才という結果への褒め言葉は、一時的には嬉しくても長続きしません。それどころか、失敗を恐れて難しいことに挑戦しなくなるリスクがあります。スタンフォード大学のキャロル・ドゥエック教授の研究では、頭がいいねと褒められた子どもより、頑張ったね、工夫したねとプロセスを褒められた子どもの方が、難しい問題をチャレンジとして楽しみ、成績も伸びやすいことが示されています。最後まで諦めなかったね、前回より速く解けたねという具体的な言葉が、子どもの内発的なやる気を育てます。" },
+  { title: "「声に出して読む」と理解度が上がる理由", body: "黙読より音読の方が脳の使用領域が広く、視覚・聴覚・発声という複数の感覚を同時に使うため、記憶に残りやすいことがわかっています。英語の音読は特に効果的で、文法を理屈としてではなく感覚として身体に覚えさせる効果があります。read→reading→have readといった変化も、声に出して繰り返すことで自然と身についていきます。うまく発音できなくてもOK。恥ずかしがらずに声に出す習慣をつけるだけで、長期的な定着率は大きく変わります。一緒に音読するのも親子のコミュニケーションになって一石二鳥です。" },
+  { title: "子どもが「やる気をなくす瞬間」ベスト3", body: "①答えを急かされたとき。考えている途中で早くと言われると、思考が止まってしまいます。子どもが黙って考えているときは、少なくとも30秒は待ってあげてください。②きょうだいや友達と比べられたとき。お兄ちゃんはできたのにという言葉は、やる気ではなく反発心を生みます。③頑張りを見てもらえないとき。点数だけに反応すると、子どもは結果が全てと学習してしまいます。逆に、じっくり待つ、その子だけを見る、過程をほめるの3つを心がけるだけで、子どものやる気スイッチは驚くほど変わります。" },
 ];
 
 function showTrivia() {
@@ -334,7 +354,7 @@ async function goAnalyze() {
     const resp = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ images, childName, childGrade, today }),
+      body: JSON.stringify({ images, childName, childGrade, childSubject, today }),
     });
 
     const text = await resp.text();
@@ -372,11 +392,15 @@ function renderReport(r, today) {
     tbody.appendChild(hdr);
     (sec.problems || []).forEach(p => {
       const tr = document.createElement('tr');
+      const isWrong = !p.isCorrect;
+      const bold = isWrong ? 'font-weight:700;' : '';
+      if (isWrong) tr.style.background = 'var(--red-bg)';
+      const questionCell = p.question + (p.processNote ? '<br><span style="font-size:11px;color:var(--amber-val);font-weight:400">💡 ' + p.processNote + '</span>' : '');
       tr.innerHTML =
-        '<td style="font-weight:500;white-space:nowrap">' + p.number + '</td>' +
-        '<td style="font-size:12px">' + p.question + '</td>' +
-        '<td style="font-size:12px">' + (p.childAnswer || '—') + '</td>' +
-        '<td style="font-size:12px;color:var(--text-sub)">' + p.correctAnswer + '</td>' +
+        '<td style="' + bold + 'white-space:nowrap">' + p.number + '</td>' +
+        '<td style="font-size:12px;' + bold + '">' + questionCell + '</td>' +
+        '<td style="font-size:12px;' + bold + (isWrong ? 'color:var(--red-text);' : '') + '">' + (p.childAnswer || '—') + '</td>' +
+        '<td style="font-size:12px;' + bold + (isWrong ? 'color:var(--green-text);' : 'color:var(--text-sub);') + '">' + p.correctAnswer + '</td>' +
         '<td><span class="badge ' + (p.isCorrect ? 'ok' : 'ng') + '">' + (p.isCorrect ? '○' : '✕') + '</span></td>';
       tbody.appendChild(tr);
     });
